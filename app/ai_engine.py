@@ -1,51 +1,42 @@
-import os
 import threading
 import requests
 import json
-from dotenv import load_dotenv
+from app.config import Config
+from app.utils import get_logger
 
-load_dotenv()
+logger = get_logger(__name__)
 
 class AIEngine:
     def __init__(self, response_callback):
         self.response_callback = response_callback
-        # Aqui chamo a GROQ para ser o cérebro
-        self.api_key = os.getenv("GROQ_API_KEY")
-        
         self.url = "https://api.groq.com/openai/v1/chat/completions"
-        self.model = "llama-3.3-70b-versatile" 
-        self.system_prompt = "Você é um assistente técnico de TI. Responda de forma curta em português."
 
     def process_text(self, text):
         if not text: return
-        # Quando o Google termina de transcrever, esta função é chamada
-        print(f"Texto recebido do Google: {text}")
+        logger.info(f"Processando áudio transcrito: {text[:50]}...")
         threading.Thread(target=self._enviar_para_groq, args=(text,), daemon=True).start()
 
     def _enviar_para_groq(self, texto_transcrito):
         try:
             payload = {
-                "model": self.model,
+                "model": Config.MODEL_NAME,
                 "messages": [
-                    {"role": "system", "content": self.system_prompt},
+                    {"role": "system", "content": Config.SYSTEM_PROMPT},
                     {"role": "user", "content": texto_transcrito}
                 ]
             }
             headers = {
-                "Authorization": f"Bearer {self.api_key}",
+                "Authorization": f"Bearer {Config.GROQ_API_KEY}",
                 "Content-Type": "application/json"
             }
             
-            print(f"Groq processando resposta...")
-            response = requests.post(self.url, headers=headers, data=json.dumps(payload))
+            response = requests.post(self.url, headers=headers, data=json.dumps(payload), timeout=10)
             
             if response.status_code == 200:
-                data = response.json()
-                resposta_final = data['choices'][0]['message']['content']
-                print(" Sucesso!")
-                self.response_callback(resposta_final)
+                resposta = response.json()['choices'][0]['message']['content']
+                logger.info("Resposta recebida da Groq.")
+                self.response_callback(resposta)
             else:
-                self.response_callback(f"Erro na Groq: {response.status_code}")
-                
+                logger.error(f"Erro na API Groq: {response.status_code}")
         except Exception as e:
-            self.response_callback(f"Erro de conexão: {e}")
+            logger.error(f"Falha na comunicação com a IA: {e}")

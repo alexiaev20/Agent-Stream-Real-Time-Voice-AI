@@ -61,7 +61,7 @@ Antes de rodar o projeto, você precisará de:
    GROQ_API_KEY=sua_chave_aqui_gsk_...
    ```
 
-## ▶Como Usar
+## Como Usar
 
 1. Execute o arquivo principal:
    ```bash
