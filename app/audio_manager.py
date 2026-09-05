@@ -1,6 +1,5 @@
 import threading
 import speech_recognition as sr
-import queue
 import time
 
 class AudioManager:
@@ -9,26 +8,25 @@ class AudioManager:
         self.recognizer = sr.Recognizer()
         self.is_listening = False
         
-        # identifica o  VB-CABLE
         self.device_index = self._find_vb_cable_index()
         self.microphone = sr.Microphone(device_index=self.device_index)
         
-        # sensibilidade de vozes de chamadas 
-        self.recognizer.dynamic_energy_threshold = True
-        self.recognizer.energy_threshold = 300 
+        # Otimização de Sensibilidade e Ruído
+        self.recognizer.dynamic_energy_threshold = False
+        self.recognizer.energy_threshold = 400 
+        self.recognizer.pause_threshold = 0.8 # Tempo de silêncio para considerar que o usuário parou de falar
 
     def _find_vb_cable_index(self):
-        """Busca o driver VB-CABLE para capturar o áudio da chamada."""
         try:
-            print(" Encontrando dispositivo de audio..")
+            print(" Encontrando dispositivo de audio...")
             for index, name in enumerate(sr.Microphone.list_microphone_names()):
                 if "CABLE Output" in name or "VB-Audio" in name or "Mixagem Estéreo" in name:
-                    print(f" Dispositivo de Captura de Chamada encontrado: {name} (Index: {index})")
+                    print(f" Captura de Chamada ativa: {name} (Index: {index})")
                     return index
-            print(" VB-CABLE não encontrado. Usando microfone padrão.")
+            print(" VB-CABLE não encontrado. Usando microfone padrão do Windows.")
             return None
         except Exception as e:
-            print(f" Erro ao listar dispositivos: {e}")
+            print(f" Erro ao listar áudio: {e}")
             return None
 
     def start_listening(self):
@@ -37,31 +35,30 @@ class AudioManager:
 
     def _listen_loop(self):
         with self.microphone as source:
-            # [função para ]gnorar ruído 
-            self.recognizer.adjust_for_ambient_noise(source, duration=1)
-            print(" Escutando a chamada (via VB-CABLE)...")
+            print(" Calibrando ruído ambiente...")
+            self.recognizer.adjust_for_ambient_noise(source, duration=0.5)
+            print(" Pronto para ouvir!")
             
             while self.is_listening:
                 try:
-                    # tempo de escuta
-                    audio = self.recognizer.listen(source, timeout=1, phrase_time_limit=15)
+                    # phrase_time_limit força corte após 10s para não ficar ouvindo infinitamente
+                    audio = self.recognizer.listen(source, timeout=2, phrase_time_limit=10)
                     
                     try:
                         text = self.recognizer.recognize_google(audio, language='pt-BR')
-                        
                         if text:
-                            print(f" Transcrito da Call: {text}")
+                            print(f" [Ouvido]: {text}")
                             self.update_callback(text)
                             
                     except sr.UnknownValueError:
-                        pass 
+                        pass # Silêncio ou áudio ininteligível
                     except sr.RequestError as e:
-                        print(f" Erro no Google: {e}")
+                        print(f" Erro de Conexão STT: {e}")
 
                 except sr.WaitTimeoutError:
                     continue 
                 except Exception as e:
-                    print(f" Erro no loop: {e}")
+                    print(f" Erro de hardware de áudio: {e}")
                     time.sleep(1)
 
     def stop_listening(self):

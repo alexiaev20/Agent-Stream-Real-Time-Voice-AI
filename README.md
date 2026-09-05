@@ -1,88 +1,33 @@
-# Agent Stream 
+# Voice AI - Real-Time Agent
 
-Este projeto é um assistente de inteligência artificial projetado para capturar áudio em tempo real (focado em chamadas/reuniões), transcrever o que está sendo dito e fornecer respostas ou sugestões inteligentes através de uma interface de overlay discreta.
+Um Agente de Inteligência Artificial construído em Python, equipado com interface gráfica (Tkinter) e capacidade de escutar chamadas de áudio (via VB-CABLE), processar linguagem natural via **Groq (Llama-3.3)** em tempo real (*Streaming*) e verbalizar as respostas (*TTS*).
 
-O sistema utiliza a **Groq API** (Llama 3) para processamento ultra-rápido e o **Google Speech Recognition** para transcrição.
+## ✨ Principais Funcionalidades
 
-##  Funcionalidades
+1. **Escuta de Baixa Latência**: O `AudioManager` escuta o áudio do sistema ou microfone cortando automaticamente os ruídos e enviando pacotes precisos.
+2. **Memória Contextual (Conversação)**: O motor não analisa frases soltas. Ele carrega a lista das últimas interações, conseguindo entender contextos contínuos de um diálogo humano.
+3. **Respostas em Streaming (Groq API)**: Em vez de ficar com a tela travada esperando o carregamento, a resposta é injetada sílaba por sílaba (efeito máquina de escrever) no painel flutuante, graças ao `stream=True`.
+4. **Voz Sintetizada (pyttsx3)**: Paralelamente ao painel gráfico, uma Thread independente aguarda a resposta final da IA e realiza a pronúncia em voz alta nativamente (Text-to-Speech) sem travar a interface.
 
-- **Captura de Áudio Inteligente**: Projetado para capturar áudio do sistema (ex: saídas de reuniões no Teams, Zoom, Meet) usando drivers como VB-CABLE.
-- **Transcrição em Tempo Real**: Converte fala em texto instantaneamente.
-- **Inteligência Artificial por Groq**: Utiliza modelos Llama 3 via Groq para gerar respostas contextuais e rápidas.
-- **Interface Overlay**: Janela (sempre visível) e transparente, ideal para usar durante chamadas sem obstruir a visão.
-- **Modo Escuro**: Interface moderna e agradável aos olhos.
+## 🛠 Como Executar
 
-## Tecnologias Utilizadas
+### 1. Pré-Requisitos
+- Python 3.10+
+- VB-CABLE Virtual Audio Device (Opcional, caso queira escutar áudio direto de chamadas do Discord/Teams/Meet).
+- Chave de API da Groq.
 
-- **Python 3**
-- **Tkinter**: Para a interface gráfica (GUI).
-- **SpeechRecognition**: Para converter áudio em texto.
-- **Groq API**: Para o "cérebro" da IA.
-- **Python-dotenv**: Gerenciamento de variáveis de ambiente.
+### 2. Instalação
+```bash
+pip install -r requirements.txt
+```
 
-## e Pré-requisitos
+Crie um arquivo `.env` na raiz do projeto com sua chave:
+```env
+GROQ_API_KEY=sua_chave_aqui
+```
 
-Antes de rodar o projeto, você precisará de:
-
-1. **Python 3.x** instalado.
-2. **Conta na Groq** e uma chave de API válida.
-3. **VB-CABLE Driver** (Opcional, mas recomendado): Para que o script consiga "ouvir" o áudio que sai do seu computador (o que as outras pessoas falam na chamada). Se não tiver, ele tentará usar o microfone padrão.
-   - [Baixar VB-CABLE](https://vb-audio.com/Cable/)
-
-## Instalação
-
-1. Clone este repositório:
-   ```bash
-   git clone https://github.com/seu-usuario/agent-stream.git
-   cd agent-stream
-   ```
-
-2. Crie e ative um ambiente virtual (recomendado):
-   ```bash
-   python -m venv venv
-   # Windows
-   .\venv\Scripts\activate
-   # Linux/Mac
-   source venv/bin/activate
-   ```
-
-3. Instale as dependências:
-   ```bash
-   pip install -r requirements.txt
-   ```
-   *Dependências principais: `requests`, `SpeechRecognition`, `python-dotenv`, `pyaudio` (necessário para o speech_recognition).*
-
-##  Configuração
-
-1. Crie um arquivo `.env` na raiz do projeto (use o `.env.example` como base se houver, ou crie do zero).
-2. Adicione sua chave da API da Groq:
-
-   ```env
-   GROQ_API_KEY=sua_chave_aqui_gsk_...
-   ```
-
-## ▶Como Usar
-
-1. Execute o arquivo principal:
-   ```bash
-   python app/main.py
-   ```
-
-2. A interface do assistente abrirá no canto da tela.
-3. O sistema buscará automaticamente por dispositivos de áudio como "CABLE Output" ou "Mixagem Estéreo".
-   - **Dica**: Nas configurações de som da sua chamada (Zoom/Meet), defina o dispositivo de SAÍDA (Alto-falantes) para "CABLE Input" se estiver usando o VB-Cable, para que o bot consiga ouvir a reunião.
-
-## Estrutura do Projeto
-
-- `app/main.py`: Ponto de entrada. Inicializa a GUI, o Gerenciador de Áudio e a IA.
-- `app/audio_manager.py`: Lida com a captura de áudio e transcrição (Google SR).
-- `app/ai_engine.py`: Comunicação com a API da Groq.
-- `app/gui_overlay.py`: Interface gráfica flutuante.
-
-## Notas Importantes
-
-- O projeto foi configurado para priorizar a velocidade, usando a API da Groq.
-- Certifique-se de que seu microfone ou dispositivo de áudio virtual está configurado corretamente no sistema operacional.
-
----
-
+### 3. Rodando o Agente
+```bash
+python app/main.py
+```
+Um painel flutuante negro e transparente aparecerá na tela, sobrepondo os demais aplicativos de forma não intrusiva. Fale no microfone e assista ao agente trabalhando.
